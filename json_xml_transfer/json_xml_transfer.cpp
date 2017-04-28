@@ -16,7 +16,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		\"updateTime\": \"2016-01-20 22:02:03\",\
 		\"infoSource\": \"cnvd\",\
 		\"credit\": 75,\
-		\"fileMd5\": \"SSFFOIDSdsdsfdfdfdfdgg34\",\
+		\"fileMd5\": \"\",\
 		\"serviceInfo\": [\
 			{\
 				\"serviceBanner\": \"SSH-2.0-OpenSSH_6.0p1 Debian-4+deb7u2\",\

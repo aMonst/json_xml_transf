@@ -66,7 +66,7 @@ string CJson::Json2Xml(const string &strJson)
 			string strKey = pNext->string;
 			if ((nPos = strKey.find("-")) == 0)
 			{
-				// 属性项  
+				// 属性项
 				strXml.append(" ");
 				strXml.append(strKey.substr(1));
 				strXml.append("=");
@@ -119,6 +119,7 @@ string CJson::Json2Xml(const string &strJson)
 	return strXml;
 }
 
+//暂时不考虑xml标签中存在属性值的问题
 string CJson::Xml2Json(const string &strxml)
 {
 	cJSON *pJsonRoot = cJSON_CreateObject();
@@ -213,6 +214,7 @@ string CJson::GoToNextItem(const string &strxml, const string &strKey)
 	return strNext;
 }
 
+//获取相同标签的个数
 int CJson::GetArrayItem(const string stxml)
 {
 	string strKey = GetXmlKey(stxml);
