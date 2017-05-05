@@ -43,77 +43,40 @@ string&  CJson::replace_all(string& str, const string& old_value, const string& 
 string CJson::Json2Xml(const string &strJson)
 {
 	string strXml = "";
-	cJSON *root = cJSON_Parse(strJson.c_str());
-	if (!root)
+	cJSON *pRoot = cJSON_Parse(strJson.c_str());
+	if (NULL == pRoot)
 	{
 		return "";
 	}
-
-	cJSON *pNext = root->child;
-	if (!pNext)
+	cJSON *pChild = pRoot->child;
+	while (pChild != NULL)
 	{
-		return strJson;
-	}
-
-	int nPos = 0;
-	while (pNext)
-	{
-		string strChild = cJSON_Print(pNext);
-		string strVal = Json2Xml(strChild);
-
-		if (pNext->string != NULL)
+		if (pChild->child != NULL) //存在子节点的情况
 		{
-			string strKey = pNext->string;
-			if ((nPos = strKey.find("-")) == 0)
-			{
-				// 属性项
-				strXml.append(" ");
-				strXml.append(strKey.substr(1));
-				strXml.append("=");
-				strXml.append(strVal);
-
-				if (pNext->next == NULL)
-					strXml.append(">");
-			}
-			else if ((nPos = strKey.find("#")) == 0)
-			{
-				// 值  
-				strXml.append(">");
-				strXml.append(strVal);
-			}
-			else if ((int)(strVal.find("=")) > 0 /*&& (int)(strVal.find("<")) < 0*/)
-			{
-				// 包含属性项的键值对  
-				strXml.append("<" + strKey);
-				strXml.append(strVal);
-				strXml.append("</" + strKey + ">");
-			}
-			else
-			{
-				// 修正底层无键的值数组的键，如：把<JUAN_XJ_preKey>123</JUAN_XJ_preKey>中的JUAN_XJ_preKey修正  
-				if ((int)strVal.find("JUAN_XJ_preKey") >= 0)
-				{
-					replace_all(strVal, "JUAN_XJ_preKey", strKey);
-					strXml.append(strVal);
-				}
-				else
-				{
-					strXml.append("<" + strKey + ">");
-					strXml.append(strVal);
-					strXml.append("</" + strKey + ">");
-				}
-			}
-		}
-		else
+			std::string strSubKey = pChild->string; //获取它的键
+			
+			std::string strSubValue = Json2Xml(cJSON_Print(pChild)); //获取它的值
+			std::string strSubXml = "<" + strSubKey + ">" + strSubValue + "</" + strSubKey + ">";
+			strXml += strSubXml;
+		}else
 		{
-			// 不包含键的值数组， 如：["123", "456"]，暂时转为<JUAN_XJ_preKey>123</JUAN_XJ_preKey>  
-			string strPreKey = "JUAN_XJ_preKey";
-			strXml.append("<" + strPreKey + ">");
-			strXml.append(strVal);
-			strXml.append("</" + strPreKey + ">");
+			std::string strKey = pChild->string;
+			std::string strVal = "";
+			if (pChild->valuestring != NULL)
+			{
+				string strTemp = pChild->valuestring;
+				strVal = "\"" + strTemp + "\"";
+			}else
+			{
+				//其余情况作为整数处理
+				strVal = cJSON_Print(pChild);
+			}
+			
+			strXml = strXml + "<" + strKey + ">" + strVal + "</" + strKey + ">";
+			
 		}
 
-		pNext = pNext->next;
+		pChild = pChild->next;
 	}
 
 	return strXml;
@@ -132,8 +95,9 @@ string CJson::Xml2Json(const string &strxml)
 		string strValue = GetXmlValueFromKey(strNext, strKey);
 		string strCurrXml = strNext;
 		strNext = GoToNextItem(strNext, strKey);
-		
-		if (strValue != "" && strValue.find("<") != -1)
+		int LabelPos = strValue.find("<"); // < 所在位置
+		int nMarkPos = strValue.find("\""); // " 所在位置
+		if (strValue != "" && LabelPos != -1 && LabelPos < nMarkPos) //引号出现在标签之后
 		{
 			//里面还有标签
 			string strNextKey = GetXmlKey(strNext);
@@ -233,4 +197,24 @@ int CJson::GetArrayItem(const string stxml)
 		iCnt++;
 	}
 	return iCnt + 1; //如果有n个标签相等，那么有 n + 1个元素
+}
+
+string CJson::GetNumFromJson(const string& strJson, const string& strKey)
+{
+	string strNum = "";
+	int nPos = strJson.find(strKey);
+	if (nPos != string::npos)
+	{
+		//能找到对应的值
+		string strItem = strJson.substr(nPos);
+		int nFirst = strItem.find(":");
+		int nEnd = 0;
+		const char *pTemp = strItem.c_str();
+		while (NULL != pTemp && '\0' != *pTemp && (!isalpha(*pTemp) || ' ' == *pTemp)) //为数字或者空格
+		{
+			pTemp++;
+		}
+		return strItem.substr(nFirst, nEnd - nFirst);
+	}
+	return "";
 }
