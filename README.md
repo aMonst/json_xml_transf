@@ -22,3 +22,5 @@ json_xml_transf
 <banner>"HTTP/1.1 200\ncontent-length:81\naccept-ranges:bytes\nexpires:Tue, 23 Feb 2016 13:37:17 GMT\nserver:Apache\nlast-modified:Tue, 12 Jan 2010 13:48:00 GMT\nconnection:Close\netag:51-47cf7e6ee8400\ncache-control:max-age=86400\ndate:Mon, 22 Feb 2016 13:37:17 GMT\ncontent-type:text/html\n\n\n<html>\n<meta http-equiv=refresh content=0;url=http://www.baidu.com/>\n</html>\n\"</banner>
 ```
   它会将里面的html标签作为一个新的xml项，而不是作为banner中的字符串
+### 20170517
+修改可能造成内存泄露的bug
