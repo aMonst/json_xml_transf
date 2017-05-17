@@ -51,11 +51,11 @@ string CJson::Json2Xml(const string &strJson)
 	cJSON *pChild = pRoot->child;
 	while (pChild != NULL)
 	{
-		if (pChild->child != NULL) //´æÔÚ×Ó½ÚµãµÄÇé¿ö
+		if (pChild->child != NULL) //å­˜åœ¨å­èŠ‚ç‚¹çš„æƒ…å†µ
 		{
-			std::string strSubKey = pChild->string; //»ñÈ¡ËüµÄ¼ü
+			std::string strSubKey = pChild->string; //è·å–å®ƒçš„é”®
 			
-			std::string strSubValue = Json2Xml(cJSON_Print(pChild)); //»ñÈ¡ËüµÄÖµ
+			std::string strSubValue = Json2Xml(cJSON_Print(pChild)); //è·å–å®ƒçš„å€¼
 			std::string strSubXml = "<" + strSubKey + ">" + strSubValue + "</" + strSubKey + ">";
 			strXml += strSubXml;
 		}else
@@ -68,7 +68,7 @@ string CJson::Json2Xml(const string &strJson)
 				strVal = "\"" + strTemp + "\"";
 			}else
 			{
-				//ÆäÓàÇé¿ö×÷ÎªÕûÊı´¦Àí
+				//å…¶ä½™æƒ…å†µä½œä¸ºæ•´æ•°å¤„ç†
 				strVal = cJSON_Print(pChild);
 			}
 			
@@ -78,11 +78,14 @@ string CJson::Json2Xml(const string &strJson)
 
 		pChild = pChild->next;
 	}
-
+	if(NULL != pRoot)
+	{
+		cJson_Delete(pRoot);
+	}
 	return strXml;
 }
 
-//ÔİÊ±²»¿¼ÂÇxml±êÇ©ÖĞ´æÔÚÊôĞÔÖµµÄÎÊÌâ
+//æš‚æ—¶ä¸è€ƒè™‘xmlæ ‡ç­¾ä¸­å­˜åœ¨å±æ€§å€¼çš„é—®é¢˜
 string CJson::Xml2Json(const string &strxml)
 {
 	cJSON *pJsonRoot = cJSON_CreateObject();
@@ -95,13 +98,13 @@ string CJson::Xml2Json(const string &strxml)
 		string strValue = GetXmlValueFromKey(strNext, strKey);
 		string strCurrXml = strNext;
 		strNext = GoToNextItem(strNext, strKey);
-		int LabelPos = strValue.find("<"); // < ËùÔÚÎ»ÖÃ
-		int nMarkPos = strValue.find("\""); // " ËùÔÚÎ»ÖÃ
-		if (strValue != "" && LabelPos != -1 && LabelPos < nMarkPos) //ÒıºÅ³öÏÖÔÚ±êÇ©Ö®ºó
+		int LabelPos = strValue.find("<"); // < æ‰€åœ¨ä½ç½®
+		int nMarkPos = strValue.find("\""); // " æ‰€åœ¨ä½ç½®
+		if (strValue != "" && LabelPos != -1 && LabelPos < nMarkPos) //å¼•å·å‡ºç°åœ¨æ ‡ç­¾ä¹‹å
 		{
-			//ÀïÃæ»¹ÓĞ±êÇ©
+			//é‡Œé¢è¿˜æœ‰æ ‡ç­¾
 			string strNextKey = GetXmlKey(strNext);
-			//ÏÂÒ»¸öµÄ±êÇ©ÓëÕâ¸öÏàÍ¬£¬ÔòÎªÒ»¸öÊı×é
+			//ä¸‹ä¸€ä¸ªçš„æ ‡ç­¾ä¸è¿™ä¸ªç›¸åŒï¼Œåˆ™ä¸ºä¸€ä¸ªæ•°ç»„
 			if (strNextKey == strKey)
 			{
 				cJSON *pArrayObj = cJSON_CreateArray();
@@ -120,7 +123,7 @@ string CJson::Xml2Json(const string &strxml)
 				strNext = strCurrXml;
 			}else
 			{
-				//·ñÔòÎªÆÕÍ¨¶ÔÏó
+				//å¦åˆ™ä¸ºæ™®é€šå¯¹è±¡
 				string strSubJson = Xml2Json(strValue);
 				cJSON *pSubJsonItem = cJSON_CreateObject();
 				pSubJsonItem = cJSON_Parse(strSubJson.c_str());
@@ -129,7 +132,7 @@ string CJson::Xml2Json(const string &strxml)
 		}
 		else
 		{
-			if (strValue.find("\"") == -1) //Õâ¸öÊÇÊı×Ö
+			if (strValue.find("\"") == -1) //è¿™ä¸ªæ˜¯æ•°å­—
 			{
 				cJSON_AddNumberToObject(pJsonRoot, strKey.c_str(), atof(strValue.c_str()));
 			}else
@@ -141,6 +144,7 @@ string CJson::Xml2Json(const string &strxml)
 	}
 
 	string strJson = cJSON_Print(pJsonRoot);
+	cJson_Delete(pJsonRoot);
 	return strJson;
 }
 
@@ -162,7 +166,7 @@ string CJson::GetXmlValueFromKey(const string &strxml, const string &strKey)
 	int nValueE = strxml.find("</" + strKey + ">");
 	int nValueS = strxml.find(">");
 
-	if (-1 == nValueE || nValueS == -1) //Ã»ÓĞ½áÎ²±êÇ©
+	if (-1 == nValueE || nValueS == -1) //æ²¡æœ‰ç»“å°¾æ ‡ç­¾
 	{
 		return "";
 	}
@@ -178,7 +182,7 @@ string CJson::GoToNextItem(const string &strxml, const string &strKey)
 	return strNext;
 }
 
-//»ñÈ¡ÏàÍ¬±êÇ©µÄ¸öÊı
+//è·å–ç›¸åŒæ ‡ç­¾çš„ä¸ªæ•°
 int CJson::GetArrayItem(const string stxml)
 {
 	string strKey = GetXmlKey(stxml);
@@ -196,7 +200,7 @@ int CJson::GetArrayItem(const string stxml)
 		}
 		iCnt++;
 	}
-	return iCnt + 1; //Èç¹ûÓĞn¸ö±êÇ©ÏàµÈ£¬ÄÇÃ´ÓĞ n + 1¸öÔªËØ
+	return iCnt + 1; //å¦‚æœæœ‰nä¸ªæ ‡ç­¾ç›¸ç­‰ï¼Œé‚£ä¹ˆæœ‰ n + 1ä¸ªå…ƒç´ 
 }
 
 string CJson::GetNumFromJson(const string& strJson, const string& strKey)
@@ -205,12 +209,12 @@ string CJson::GetNumFromJson(const string& strJson, const string& strKey)
 	int nPos = strJson.find(strKey);
 	if (nPos != string::npos)
 	{
-		//ÄÜÕÒµ½¶ÔÓ¦µÄÖµ
+		//èƒ½æ‰¾åˆ°å¯¹åº”çš„å€¼
 		string strItem = strJson.substr(nPos);
 		int nFirst = strItem.find(":");
 		int nEnd = 0;
 		const char *pTemp = strItem.c_str();
-		while (NULL != pTemp && '\0' != *pTemp && (!isalpha(*pTemp) || ' ' == *pTemp)) //ÎªÊı×Ö»òÕß¿Õ¸ñ
+		while (NULL != pTemp && '\0' != *pTemp && (!isalpha(*pTemp) || ' ' == *pTemp)) //ä¸ºæ•°å­—æˆ–è€…ç©ºæ ¼
 		{
 			pTemp++;
 		}
