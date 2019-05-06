@@ -48,16 +48,33 @@ string CJson::Json2Xml(const string &strJson)
 	{
 		return "";
 	}
+
 	cJSON *pChild = pRoot->child;
 	while (pChild != NULL)
 	{
 		if (pChild->child != NULL) //存在子节点的情况
 		{
-			std::string strSubKey = pChild->string; //获取它的键
-			
-			std::string strSubValue = Json2Xml(cJSON_Print(pChild)); //获取它的值
-			std::string strSubXml = "<" + strSubKey + ">" + strSubValue + "</" + strSubKey + ">";
-			strXml += strSubXml;
+			if (cJSON_Array == pChild->type) //如果是数组类型
+			{
+				std::string strArrayValue = "";
+				int nSize = cJSON_GetArraySize(pChild);
+				for (int i = 0; i < nSize; i++)
+				{
+					cJSON *item = cJSON_GetArrayItem(pChild, i);
+					std::string strValue = Json2Xml(cJSON_Print(item));
+					strArrayValue += strValue;
+				}
+
+				strXml = strXml + "<" + pChild->string + ">" + strArrayValue + "</" + pChild->string + ">";
+				return strXml;
+			}else
+			{
+				std::string strSubKey = pChild->string; //获取它的键
+
+				std::string strSubValue = Json2Xml(cJSON_Print(pChild)); //获取它的值
+				std::string strSubXml = "<" + strSubKey + ">" + strSubValue + "</" + strSubKey + ">";
+				strXml += strSubXml;
+			}
 		}else
 		{
 			std::string strKey = pChild->string;
@@ -77,6 +94,11 @@ string CJson::Json2Xml(const string &strJson)
 		}
 
 		pChild = pChild->next;
+	}
+
+	if(NULL != pRoot)
+	{
+		cJSON_Delete(pRoot);
 	}
 
 	return strXml;
@@ -141,6 +163,10 @@ string CJson::Xml2Json(const string &strxml)
 	}
 
 	string strJson = cJSON_Print(pJsonRoot);
+	if (NULL != pJsonRoot)
+	{
+		cJSON_Delete(pJsonRoot);
+	}
 	return strJson;
 }
 
